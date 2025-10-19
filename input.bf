@@ -26,26 +26,30 @@
 
 
 ( stack manipulation words )
-: DROP [-]< ;
-: SWAP [->+<]<[->+<]>>[-<<+>>]< ;
-: SWAPDROP <[-]>[-<+>]< ;
-: 1SWAP [->+<]+> ;
-: DUP [->+>+<<]>>[-<<+>>]< ;
 
-: ROT  [->+<] <[->+<] <[->+<] >>> [-<<<+>>>] < ;
+: DROP ( a -- ) [-]< ;
 
-( a b -- 0 a b )
-: 0ROT
+: SWAP ( a b -- b a ) [->+<]<[->+<]>>[-<<+>>]< ;
+
+: SWAPDROP ( a b -- b ) <[-]>[-<+>]< ;
+
+: 1SWAP ( a -- 1 a ) [->+<]+> ;
+
+: DUP ( a -- a a ) [->+>+<<]>>[-<<+>>]< ;
+
+: ROT ( a b c -- c a b )  [->+<] <[->+<] <[->+<] >>> [-<<<+>>>] < ;
+
+: 0ROT ( a b -- 0 a b )
 		    ( a b )
 	[->+<]  ( a 0< b )
 	<[->+<] ( 0< a b )
 	>>      ( 0 a b )
 	;
 
-: UNROT ROT ROT ;
-: OVER <[->> +>+< <<] >>> [-<<<+>>>] < ;
+: UNROT ( a b c -- b c a ) ROT ROT ;
+: OVER ( a b -- a b a  ) <[->> +>+< <<] >>> [-<<<+>>>] < ;
 
-: 2DUP
+: 2DUP ( a b -- a b a b )
 	[->>+>+<<<] >>>
 	[-<<<+>>>] <<<<
 	[->>+>>+<<<<] >>>>
@@ -54,50 +58,68 @@
 
 ( arithmetic words )
 
-: INC + ;
-: DEC - ;
+: INC ( a -- a+1 ) + ;
 
-( example: 2 3 ADD => 5 )
-: ADD [-<+>]< ;
+: DEC ( a -- a-1 ) - ;
 
-( example: 5 3 SUB => 2 )
-: SUB [-<->]< ;
+: ADD ( a b -- a+b ) [-<+>]< ;
 
-( example: 2 3 MUL => 6 )
-: MUL < [-> [->+>+<<] >>[-<<+>>]<< <] >[-]>[-<<+>>]<< ;
+: SUB ( a b -- a-b ) [-<->]< ;
 
-( example: 5 2MUL => 10 )
-: 2MUL [->++<]>[-<+>]< ;
+: MUL ( a b -- a*b ) < [-> [->+>+<<] >>[-<<+>>]<< <] >[-]>[-<<+>>]<< ;
+
+: 2MUL ( a -- 2*a ) [->++<]>[-<+>]< ;
 
 ( logical words )
-: NOT >+< [>-<[-]] >[-<+>]< ;
-: EQ SUB NOT ;
 
+: NOT ( a -- !a ) >+< [>-<[-]] >[-<+>]< ;
+
+: EQ ( a b -- a+b ) SUB NOT ;
+
+( control flow words )
+
+( The "IF...ENDIF" construct pops one value off the stack.
+  The code inside the IF...ENDIF block is executed when this value is zero.
+
+  The code inside the construct can do arbitrary stack manipulations, but
+  IF...ENDIF assumes everything after cursor is null after the block code executes,
+  as usual.
+
+  The "IF...ELSE...ENDIF" behaves like "IF...ENDIF", but if the popped value
+  is zero, it will execute the code in the "ELSE...ENDIF" block.
+)
 : IF [[-] < ;
 : ELSE >>+<< >]< >> NOT [-<+>]<  IF ; 
 : ENDIF > ]< ;
+
+( "DO_..._WHILE" Executes the code inside the block, and pops a value off the
+  stack when the control flow reaches WHILE, and if this value is not zero, it
+  jumps back to DO.
+)
 : DO_ >>+[-<< ;
 : _WHILE IF >>+<< ENDIF >> ] << ;
 
 ( complex words )
-: POW
-	1SWAP 
+: POW ( b n -- b^n )
+	       ( b n )
+	1 SWAP ( b 1 n )
 	DO_
-		DEC
-		ROT
-		OVER MUL
-		UNROT
-		DUP
+                   ( b r n )
+		     DEC   ( b r n-1 )
+		     ROT   ( n-1 b r )
+		OVER MUL   ( n-1 b r*b )
+		     UNROT ( b r*b n-1 )
+		     DUP   ( b r*b n-1 n-1 )
 	_WHILE
-	DROP
-	SWAPDROP
+	DROP     ( b r )
+	SWAPDROP ( r )
 ;
 
 : SATDEC DUP IF - ENDIF ;
 : LT <[-> SATDEC <] >[-<+>]< ;
 
 
-: DIV
+: DIV ( a b -- q r )
 	      ( a b )
 	0ROT  ( 0 a b ) 
 
@@ -116,9 +138,12 @@
 		ENDIF
 		( n a b k )
 	_WHILE
-	DROP
+         ( n a b )
+	DROP ( n a )
+	     ( q r )
 ;
 
 : 43 10 [->++++<] >[-<+>]<+++ ;
 
 16 10 DIV ?2
+2 4 POW ?
