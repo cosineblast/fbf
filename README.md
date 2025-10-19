@@ -25,7 +25,8 @@ The interpreter includes a simple preprocessor that allows defining custom **wor
   * **Word Usage:** Use the word name in the main code. The preprocessor replaces the word with its defined sequence of commands.
       * Example: `inc_cell inc_cell .`
   * **Tokenization:** The preprocessor tokenizes the source code by splitting it on whitespace. Commands and word definitions must be separated by whitespace.
-      * This means `+; ` is not the same as `+ ; `, only the latter counts as a word terminator. 
+      * This means `+; ` is not the same as `+ ; `, only in the latter `;` counts as a word terminator. 
+  * **Comments:** Any code inside  whitespace-delimited parenthesis `(` `)` is ignored. Only single-level parenthesis comments are considered.
 
 -----
 

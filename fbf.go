@@ -124,6 +124,10 @@ func preprocess(code string) string {
 			words[targetWord] = base.String()
 			base = strings.Builder{}
 			targetWord = ""
+		} else if token == "(" {
+			for i < len(tokens) && tokens[i] != ")" {
+				i += 1
+			}
 		} else {
 			toWrite := token
 
