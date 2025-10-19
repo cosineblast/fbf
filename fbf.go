@@ -20,7 +20,7 @@ func findMatches(code string) map[int]int {
 			top += 1
 		} else if v == ']' {
 			if top == 0 {
-				panic(fmt.Sprintf("Unmatched brace at position i"))
+				panic(fmt.Sprintf("Unmatched brace"))
 			}
 			top -= 1
 			left := openBraces[top]
